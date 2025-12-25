@@ -1,0 +1,31 @@
+<script>
+const BASE = "http://localhost:8081/api/rooms";
+
+function updateRoom() {
+
+    if (!roomId.value) {
+        alert("Room ID required");
+        return;
+    }
+
+    const form = new FormData();
+    form.append("roomNumber", roomNumber.value.trim());
+    form.append("pricePerNight", price.value);
+    form.append("roomType", roomType.value); // MUST be SINGLE / DOUBLE / DORMITORY
+    form.append("status", status.value);
+
+    if (image.files.length > 0) {
+        form.append("image", image.files[0]);
+    }
+
+    fetch(`${BASE}/updateroom-with-image/${roomId.value}`, {
+        method: "PUT",
+        body: form
+    })
+    .then(res => {
+        if (!res.ok) throw new Error();
+        alert("Room updated successfully");
+    })
+    .catch(() => alert("Update failed"));
+}
+</script>

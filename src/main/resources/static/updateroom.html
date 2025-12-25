@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update / Status / Delete Room</title>
+    <style>
+        body { font-family: Arial; background:#0f172a; color:white; padding:20px }
+        input, select, button { margin:6px; padding:6px }
+        button { cursor:pointer }
+    </style>
+</head>
+<body>
+
+<h2>Update Room With Image</h2>
+
+<input id="roomId" placeholder="Room ID">
+<input id="roomNumber" placeholder="Room Number">
+<input id="price" type="number" placeholder="Price per night">
+
+<select id="roomType">
+    <option>SINGLE</option>
+    <option>DOUBLE</option>
+    <option>DORMITORY</option>
+</select>
+
+<select id="status">
+    <option>ACTIVE</option>
+    <option>INACTIVE</option>
+    <option>MAINTENANCE</option>
+</select>
+
+<input type="file" id="image">
+
+<br>
+<button onclick="updateRoom()">Update Room</button>
+
+<hr>
+
+<h2>Change Status</h2>
+<input id="statusRoomId" placeholder="Room ID">
+<select id="newStatus">
+    <option>ACTIVE</option>
+    <option>INACTIVE</option>
+    <option>MAINTENANCE</option>
+</select>
+<button onclick="changeStatus()">Change Status</button>
+
+<hr>
+
+<h2>Delete Room</h2>
+<input id="deleteRoomId" placeholder="Room ID">
+<button onclick="deleteRoom()">Delete</button>
+
+<script>
+const BASE = "http://localhost:8081/api/rooms";
+
+// 🔹 UPDATE WITH IMAGE
+function updateRoom() {
+    const form = new FormData();
+    form.append("roomNumber", roomNumber.value);
+    form.append("pricePerNight", price.value);
+    form.append("roomType", roomType.value);
+    form.append("status", status.value);
+
+    if (image.files[0]) {
+        form.append("image", image.files[0]);
+    }
+
+    fetch(`${BASE}/updateroom-with-image/${roomId.value}`, {
+        method: "PUT",
+        body: form   // ❌ no headers
+    })
+    .then(res => res.ok ? alert("Room updated") : alert("Update failed"));
+}
+
+// 🔹 CHANGE STATUS
+function changeStatus() {
+    fetch(`${BASE}/${statusRoomId.value}/status?status=${newStatus.value}`, {
+        method: "PATCH"
+    })
+    .then(res => res.ok ? alert("Status updated") : alert("Failed"));
+}
+
+// 🔹 DELETE ROOM
+function deleteRoom() {
+    fetch(`${BASE}/delete/${deleteRoomId.value}`, {
+        method: "DELETE"
+    })
+    .then(res => res.ok ? alert("Room deleted") : alert("Delete failed"));
+}
+</script>
+
+</body>
+</html>

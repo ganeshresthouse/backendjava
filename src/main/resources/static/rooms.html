@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Booking Payment</title>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+        .box {
+            background: #fff;
+            padding: 25px;
+            width: 350px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        button {
+            background: #3399cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #287fa8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Pay for Booking</h2>
+
+    <input type="number" id="bookingId" placeholder="Enter Booking ID">
+
+    <button onclick="payNow()">Pay Now</button>
+</div>
+
+<script>
+function payNow() {
+
+    const bookingId = document.getElementById("bookingId").value;
+
+    if (!bookingId) {
+        alert("Please enter Booking ID");
+        return;
+    }
+
+    // 1️⃣ CREATE RAZORPAY ORDER
+    fetch(`http://localhost:8081/api/payment/create/${bookingId}`, {
+        method: "POST"
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Order creation failed");
+        return res.json();
+    })
+    .then(data => {
+
+        console.log("Order created:", data);
+
+        // 2️⃣ OPEN RAZORPAY CHECKOUT
+        const options = {
+            key: "rzp_test_RuhTa4XOhS99d4", // ✅ KEY_ID
+            amount: data.amount,
+            currency: data.currency,
+            order_id: data.orderId,
+            name: "GANESH REST HOUSE",
+            description: "Room Booking Payment",
+
+            handler: function (response) {
+                console.log("Payment response:", response);
+
+                // 3️⃣ VERIFY PAYMENT
+                fetch("http://localhost:8081/api/payment/verify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    alert(result.message);
+                    console.log("Verification result:", result);
+                })
+                .catch(() => alert("Payment verification failed"));
+            },
+
+            theme: { color: "#3399cc" }
+        };
+
+        new Razorpay(options).open();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Unable to create payment order");
+    });
+}
+</script>
+
+</body>
+</html>
